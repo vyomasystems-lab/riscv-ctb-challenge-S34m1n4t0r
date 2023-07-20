@@ -253,3 +253,44 @@ test.S:156: Error: unrecognized opcode `divuw s4,a3,t4'
 test.S:157: Error: unrecognized opcode `remw s6,s6,s11'
 
 ```
+
+
+### challenge2_exceptions
+
+```python
+# ---------------------------------------------------------------------------------
+# Exception generation
+# ---------------------------------------------------------------------------------
+exception-generation:
+  ecause00: 0
+  ecause01: 0
+  ecause02: 10    # Generates a total of 10 illegal instructions, evenly distributed
+  ecause03: 0
+  ecause04: 0
+  ecause05: 0
+  ecause06: 0
+  ecause07: 0
+  ecause08: 0
+  ecause09: 0
+  ecause10: 0
+  ecause11: 0
+  ecause12: 0
+  ecause13: 0
+  ecause14: 0
+```
+
+Output of '''make all'''
+```assembler
+core   0: exception trap_illegal_instruction, epc 0x800004ec
+core   0: exception trap_illegal_instruction, epc 0x8000052c
+core   0: exception trap_illegal_instruction, epc 0x80000534
+core   0: exception trap_illegal_instruction, epc 0x800005a4
+core   0: exception trap_illegal_instruction, epc 0x800005d8
+core   0: exception trap_illegal_instruction, epc 0x80000610
+core   0: exception trap_illegal_instruction, epc 0x8000061c
+core   0: exception trap_illegal_instruction, epc 0x80000638
+core   0: exception trap_illegal_instruction, epc 0x80000668
+core   0: exception trap_illegal_instruction, epc 0x80000684
+wc -l exceptions.log
+10 exceptions.log
+```
