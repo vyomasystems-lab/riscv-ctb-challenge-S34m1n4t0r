@@ -46,5 +46,6 @@ core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80003d1c
 **Proposed changes**
 
 ```assembly
-
+  lui t0, %hi(test_cases)
+  addi t0, t0, %lo(test_cases)
 ```
