@@ -4,11 +4,11 @@ all: gen compile disass spike check
 gen: clean
 	@echo '[UpTickPro] Test Generation ------'
 	aapg setup
-	aapg gen --config_file $(PWD)/rv32i.yaml --asm_name test --output_dir $(PWD) --arch rv32
+	aapg gen --config_file $(PWD)/rv32i.yaml --asm_name test --output_dir $(PWD) --arch rv32i
 
 compile:
 	@echo '[UpTickPro] Test Compilation ------'
-	riscv32-unknown-elf-gcc -march=rv32g -mabi=ilp32 -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -I$(PWD)/work/common -T$(PWD)/test.ld test.S $(PWD)/work/common/crt.S -o test.elf
+	riscv32-unknown-elf-gcc -march=rv32i -mabi=ilp32 -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -I$(PWD)/work/common -T$(PWD)/test.ld test.S $(PWD)/work/common/crt.S -o test.elf
 
 disass: compile
 	@echo '[UpTickPro] Test Disassembly ------'

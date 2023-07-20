@@ -13,17 +13,24 @@ RVTEST_CODE_BEGIN
 illegal_instruction:
   .word 0              
   j fail
-  TEST_PASSFAIL
-
+  
   .align 8
   .global mtvec_handler
 mtvec_handler:
   li t1, CAUSE_ILLEGAL_INSTRUCTION
   csrr t0, mcause
   bne t0, t1, fail
-  csrr t0, mepc
-
+  csrr t0, mepc               # mepc should point to illegal_instruction
+  la t1, illegal_instruction  # load actual address of illegal_instruction
+  bne t0, t1, fail            # check that cause for trap was our illegal instruction
+  la t0, test_end             # load address of test_end
+  csrw mepc, t0;              # set mepc to test_end, to pass test
   mret
+
+
+test_end:
+
+TEST_PASSFAIL
 
 RVTEST_CODE_END
 
