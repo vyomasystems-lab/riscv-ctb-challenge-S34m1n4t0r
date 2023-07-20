@@ -108,3 +108,63 @@ The values of ```x28``` and ```x29``` are compared in the loop, then the address
 
 
 ### Illegal
+
+The implementation of the '''mtvec_handler''' misses, that the '''mepc'''-CSR register still holds the address of the illegal instruction. After the '''mret''', there is no call to the '''pass''' function. 
+As the test is completed however with the call to the '''mtvec_handler''', the '''mepc'' register can be written to contain the address of '''pass'''
+
+'''assembler
+mtvec_handler:
+  li t1, CAUSE_ILLEGAL_INSTRUCTION
+  csrr t0, mcause
+  bne t0, t1, fail
+  csrr t0, mepc
+
+  li t1, illegal_instruction
+  bne t0, t1, fail
+  la t0, pass
+  csrw mepc, t0
+'''
+
+At 0x800001fc, the '''mret''' instruction is called, returning from the '''mtvec_handler'''. The next instuction is called from 0x800001cc, the first line of '''pass'''. After completing this function, the '''trap_vector''' is called again, this time continuing to '''write_tohost''', indicating to the host, that the test was passed successfully and the illegal instruction was processed as expected.
+'''
+core   0: 3 0x800001ec (0x341022f3) x5  0x800001a4
+core   0: 3 0x800001f0 (0x00000297) x5  0x800001f0
+core   0: 3 0x800001f4 (0xfdc28293) x5  0x800001cc
+core   0: 3 0x800001f8 (0x34129073) c833_mepc 0x800001cc
+core   0: 3 0x800001fc (0x30200073) c768_mstatus 0x00000080
+core   0: 3 0x800001cc (0x0ff0000f)
+core   0: 3 0x800001d0 (0x00100193) x3  0x00000001
+core   0: 3 0x800001d4 (0x05d00893) x17 0x0000005d
+core   0: 3 0x800001d8 (0x00000513) x10 0x00000000
+core   0: 3 0x80000004 (0x34202f73) x30 0x0000000b
+core   0: 3 0x80000008 (0x00800f93) x31 0x00000008
+core   0: 3 0x8000000c (0x03ff0a63)
+core   0: 3 0x80000010 (0x00900f93) x31 0x00000009
+core   0: 3 0x80000014 (0x03ff0663)
+core   0: 3 0x80000018 (0x00b00f93) x31 0x0000000b
+core   0: 3 0x8000001c (0x03ff0263)
+core   0: 3 0x80000040 (0x00001f17) x30 0x80001040
+core   0: 3 0x80000044 (0xfc3f2023) mem 0x80001000 0x00000001
+core   0: 3 0x80000048 (0x00001f17) x30 0x80001048
+core   0: 3 0x8000004c (0xfa0f2e23) mem 0x80001004 0x00000000
+'''
+
+'''
+800001e0 <mtvec_handler>:
+800001e0:	00200313          	li	t1,2
+800001e4:	342022f3          	csrr	t0,mcause
+800001e8:	fc6294e3          	bne	t0,t1,800001b0 <fail>
+800001ec:	341022f3          	csrr	t0,mepc
+800001f0:	00000297          	auipc	t0,0x0
+800001f4:	fdc28293          	addi	t0,t0,-36 # 800001cc <pass>
+800001f8:	34129073          	csrw	mepc,t0
+800001fc:	30200073          	mret
+80000200:	c0001073          	unimp
+
+800001cc <pass>:
+800001cc:	0ff0000f          	fence
+800001d0:	00100193          	li	gp,1
+800001d4:	05d00893          	li	a7,93
+800001d8:	00000513          	li	a0,0
+800001dc:	00000073          	ecall
+'''
