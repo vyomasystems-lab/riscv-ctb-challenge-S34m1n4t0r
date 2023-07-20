@@ -72,16 +72,12 @@ Disassembly of section .data:
 
 **Proposed changes**
 
-To fix the above isue, the line ```la t0, test_cases``` is replaxes with the following instructions, which explicitly load the address to ```t0/x5```, not leaving it up for the compiler:
-```assembly
-lui t0, %hi(test_cases)
-addi t0, t0, %lo(test_cases)
-```
+To fix the above isue, the line ```.align 4``` i
 **Fixed output**
 ```listing
 core   0: 3 0 0x80000198 (0x00200193) x3  0x00000002
-core   0: 3 0 0x8000019c (0x800022b7) x5  0x80002000
-core   0: 3 0 0x800001a0 (0x00028293) x5  0x80002000
+core   0: 3 0x800001a4 (0x00002297) x5  0x800021a4
+core   0: 3 0x800001a8 (0xe5c28293) x5  0x80002000
 core   0: 3 0 0x800001a4 (0x00300f13) x30 0x00000003
 core   0: 3 0 0x800001a8 (0x0002a303) x6  0x00000020 mem 0x80002000
 core   0: 3 0 0x800001ac (0x0042a383) x7  0x00000020 mem 0x80002004
