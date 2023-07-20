@@ -4,7 +4,7 @@ all: gen compile disass spike check
 gen: clean
 	@echo '[UpTickPro] Test Generation ------'
 	aapg setup
-	aapg gen --config_file $(PWD)/rv32i.yaml --asm_name test --output_dir $(PWD) --arch rv32i
+	aapg gen --config_file $(PWD)/rv32i.yaml --asm_name test --output_dir $(PWD) --arch rv32
 
 compile:
 	@echo '[UpTickPro] Test Compilation ------'

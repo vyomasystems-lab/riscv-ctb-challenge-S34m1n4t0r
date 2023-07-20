@@ -23,7 +23,7 @@ priv-mode:
 #                           
 # ---------------------------------------------------------------------------------
 general:
-  total_instructions: 10
+  total_instructions: 110
   regs_not_use: x1,x2
   custom_trap_handler: true
   code_start_address: 0x80000000
@@ -41,8 +41,8 @@ isa-instruction-distribution:
   rel_sys.csr: 0
   rel_rv32i.ctrl: 0
   rel_rv32i.compute: 1
-  rel_rv32i.data: 1
-  rel_rv32i.fence:  0
+  rel_rv32i.data: 0
+  rel_rv32i.fence:  1
   rel_rv64i.compute: 0
   rel_rv64i.data: 0
   rel_rv32i.zba: 0
@@ -178,7 +178,7 @@ d-cache:
 exception-generation:
   ecause00: 0
   ecause01: 0
-  ecause02: 2
+  ecause02: 10
   ecause03: 0
   ecause04: 0
   ecause05: 0
