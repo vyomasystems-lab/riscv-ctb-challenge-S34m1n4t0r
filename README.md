@@ -2,7 +2,7 @@
 
 ## Challenge Level 1
 
-### Logical
+### challenge1_logical
 
 Output of compile:
 ```assembly
@@ -24,7 +24,7 @@ and s5,t1,s0
 
 
 
-### Loop
+### challenge2_loop
 
 
 
@@ -71,6 +71,27 @@ Disassembly of section .data:
 
 
 **Proposed changes**
+```assembler
+
+  la t0, test_cases
+  li t5, 3          # Number of testcases
+
+
+loop:
+	lw t1, (t0)
+  lw t2, 4(t0)
+  lw t3, 8(t0)
+  add t4, t1, t2
+  addi t0, t0, 12
+  addi t5, t5, -1         # decrement test counter
+  beqz t5 , test_end      # if end of data is reached, end loop
+  beq t3, t4, loop        # check if sum is correct
+  j fail
+
+test_end:
+
+```
+
 
 To fix the above isue, the line ```.align 4``` i
 **Fixed output**
@@ -107,26 +128,41 @@ core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80002030
 The values of ```x28``` and ```x29``` are compared in the loop, then the address in ```t0/x5``` is incremented, to check the next data pair.
 
 
-### Illegal
+### challenge3_illegal
 
 The implementation of the '''mtvec_handler''' misses, that the '''mepc'''-CSR register still holds the address of the illegal instruction. After the '''mret''', there is no call to the '''pass''' function. 
 As the test is completed however with the call to the '''mtvec_handler''', the '''mepc'' register can be written to contain the address of '''pass'''
 
-'''assembler
+```assembler
+  .align 2
+  .option norvc
+
+  li TESTNUM, 2
+illegal_instruction:
+  .word 0              
+  j fail
+  
+  .align 4
+  .global mtvec_handler
 mtvec_handler:
   li t1, CAUSE_ILLEGAL_INSTRUCTION
   csrr t0, mcause
   bne t0, t1, fail
-  csrr t0, mepc
+  csrr t0, mepc               # mepc should point to illegal_instruction
+  la t1, illegal_instruction  # load actual address of illegal_instruction
+  bne t0, t1, fail            # check that cause for trap was our illegal instruction
+  la t0, test_end             # load address of test_end
+  csrw mepc, t0;              # set mepc to test_end, to pass test
+  mret
 
-  li t1, illegal_instruction
-  bne t0, t1, fail
-  la t0, pass
-  csrw mepc, t0
-'''
+
+test_end:
+
+TEST_PASSFAIL
+```
 
 At 0x800001fc, the '''mret''' instruction is called, returning from the '''mtvec_handler'''. The next instuction is called from 0x800001cc, the first line of '''pass'''. After completing this function, the '''trap_vector''' is called again, this time continuing to '''write_tohost''', indicating to the host, that the test was passed successfully and the illegal instruction was processed as expected.
-'''
+```
 core   0: 3 0x800001ec (0x341022f3) x5  0x800001a4
 core   0: 3 0x800001f0 (0x00000297) x5  0x800001f0
 core   0: 3 0x800001f4 (0xfdc28293) x5  0x800001cc
@@ -147,9 +183,9 @@ core   0: 3 0x80000040 (0x00001f17) x30 0x80001040
 core   0: 3 0x80000044 (0xfc3f2023) mem 0x80001000 0x00000001
 core   0: 3 0x80000048 (0x00001f17) x30 0x80001048
 core   0: 3 0x8000004c (0xfa0f2e23) mem 0x80001004 0x00000000
-'''
+```
 
-'''
+```
 800001e0 <mtvec_handler>:
 800001e0:	00200313          	li	t1,2
 800001e4:	342022f3          	csrr	t0,mcause
@@ -167,4 +203,53 @@ core   0: 3 0x8000004c (0xfa0f2e23) mem 0x80001004 0x00000000
 800001d4:	05d00893          	li	a7,93
 800001d8:	00000513          	li	a0,0
 800001dc:	00000073          	ecall
-'''
+```
+## challenge_level2
+
+## challenge1_instructions
+
+
+```python
+isa-instruction-distribution:
+  rel_sys: 0
+  rel_sys.csr: 0
+  rel_rv32i.ctrl: 0
+  rel_rv32i.compute: 10
+  rel_rv32i.data: 10
+  rel_rv32i.fence: 10
+  rel_rv64i.compute: 0
+  rel_rv64i.data: 0
+  rel_rv32i.zba: 0
+  rel_rv64i.zba: 0
+  rel_rv32i.zbb: 0
+  rel_rv64i.zbb: 0
+  rel_rv32i.zbc: 0
+  rel_rv32i.zbs: 0
+  rel_rv32i.zbe: 0
+  rel_rv64i.zbe: 0
+  rel_rv32i.zbf: 0
+  rel_rv64i.zbf: 0
+  rel_rv64i.zbm: 0
+  rel_rv32i.zbp: 0
+  rel_rv64i.zbp: 0
+  rel_rv32i.zbr: 0
+  rel_rv64i.zbr: 0
+  rel_rv32i.zbt: 0
+  rel_rv64i.zbt: 0
+  rel_rv32m: 0
+  rel_rv64m: 0      # Here was a 10 in the original config file.
+  rel_rv32a: 0
+  rel_rv64a: 0
+  rel_rv32f: 0
+  rel_rv64f: 0
+  rel_rv32d: 0
+  rel_rv64d: 0
+```
+
+This generates instructions for the riscv64, e.g.
+```assembler
+test.S: Assembler messages:
+test.S:156: Error: unrecognized opcode `divuw s4,a3,t4'
+test.S:157: Error: unrecognized opcode `remw s6,s6,s11'
+
+```
