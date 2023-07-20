@@ -10,7 +10,11 @@ RVTEST_CODE_BEGIN
   .option norvc
   li TESTNUM, 2
 
-  la t0, test_cases
+  lui t0, %hi(test_cases)
+  addi t0, t0, %lo(test_cases)
+
+  //Replaces la: 
+  //la t0, test_cases
   li t5, 3
 
 loop:
