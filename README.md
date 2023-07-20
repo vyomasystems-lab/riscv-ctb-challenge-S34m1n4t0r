@@ -47,7 +47,7 @@ core   0: 3 0 0x800001b4 (0x00730eb3) x29 0x00000000
 core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80003d1c
 ```
 
-Problem: The address of the .data region is not loaded correctly to *t0/x5*. As the dissassembly shows, the expected value should be **0x80002000**. 
+Problem: The address of the .data region is not loaded correctly to ```t0/x5```. As the dissassembly shows, the expected value should be **0x80002000**. 
 ```data
 Disassembly of section .data:
 
@@ -72,7 +72,7 @@ Disassembly of section .data:
 
 **Proposed changes**
 
-To fix the above isue, the line **la t0, test_cases** is replaxes with the following instructions, which explicitly load the address to *t0/x5*, not leaving it up for the compiler:
+To fix the above isue, the line ```la t0, test_cases``` is replaxes with the following instructions, which explicitly load the address to ```t0/x5```, not leaving it up for the compiler:
 ```assembly
 lui t0, %hi(test_cases)
 addi t0, t0, %lo(test_cases)
@@ -108,7 +108,7 @@ core   0: 3 0 0x800001b4 (0x00730eb3) x29 0x00000000
 core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80002030
 ```
 
-The values of *x28* and x29 are compared in the loop, then the address in *t0* is incremented, to check the next data pair.
+The values of ```x28``` and ```x29``` are compared in the loop, then the address in ```t0/x5``` is incremented, to check the next data pair.
 
 
 ### Illegal
