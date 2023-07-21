@@ -10,19 +10,15 @@ disass: compile
 spike: compile
 	@echo '[UpTickPro] Spike ------'
 	spike --isa=rv32i test.elf 
-	spike --log-commits --log spike.dump --isa=rv32i +signature=test_spike_signature.log test.elf
+	spike --log-commits --log spike.dump --isa=rv32i test.elf
 
 sim: spike
 	@echo '[UpTickPro] Simulation ------'
 	elf2hex  4  8388608 test.elf 2147483648 > code.mem
 	cp code.mem ../planigale_riscv/firmware/firmware_mem.hex
 	cp ../riscv/boot.LSB ../planigale_riscv/firmware/start_mem.hex
-	cd ../planigale_riscv
-	$(make) sim_extern
-	cd $(PWD)
+	make -C ../planigale_riscv sim_extern
 	cp ../planigale_riscv/trace.dump rtl.dump
-	head -n -4 rtl.dump > temp.dump
-	cp temp.dump rtl.dump
 	@echo '[UpTickPro] Comparison ------'
 	diff rtl.dump spike.dump
 	
