@@ -27,7 +27,7 @@ and s5,t1,s0
 
 ### challenge2_loop
 
-When eexecuting '''make all''' in the challenge2_loop directory, the '''spike''' command can only be aborted using the manual exit '''Ctrl+C'''.
+When executing '''make all''' in the challenge2_loop directory, the '''spike''' command can only be aborted using the manual exit '''Ctrl+C'''.
 
 
 ```assembly
@@ -80,7 +80,7 @@ Disassembly of section .data:
 
 
 loop:
-	lw t1, (t0)
+ lw t1, (t0)
   lw t2, 4(t0)
   lw t3, 8(t0)
   add t4, t1, t2
