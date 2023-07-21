@@ -234,3 +234,41 @@ core   0: exception trap_illegal_instruction, epc 0x80000684
 wc -l exceptions.log
 10 exceptions.log
 ```
+
+## challenge3_planigale_riscv
+
+### Bug in arithmetic shift
+
+```verilog
+ wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >> r_op2[4:0]);   //arithmetic shift with deliberate bug
+```
+```test.disass:```
+```
+80001938 <i00000001d1>:
+80001938:	6d95f697          	auipc	a3,0x6d95f
+
+8000193c <i00000001d2>:
+8000193c:	3cdabc13          	sltiu	s8,s5,973
+
+80001940 <i00000001d3>:
+80001940:	4186d413          	srai	s0,a3,0x18
+```
+
+```trace.dump:```
+```
+3 0x80001938 (0x6d95f697) x13 0xed960938
+3 0x8000193c (0x3cdabc13) x24 0x00000001
+3 0x80001940 (0x4186d413) x 8 0x000000ed
+```
+```diff:```
+```
+< 3 0x80001940 (0x4186d413) x 8 0x000000ed
+---
+> 3 0x80001940 (0x4186d413) x 8 0xffffffed
+```
+Correct it has to be:
+```verilog
+ wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >>> r_op2[4:0]);   //arithmetic shift operation is suplied by verilog, as /*>>>*/
+```
+
+### Bug in arithmetic shift
