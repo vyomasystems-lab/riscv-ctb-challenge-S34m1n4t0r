@@ -271,4 +271,47 @@ Correct it has to be:
  wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >>> r_op2[4:0]);   //arithmetic shift operation is suplied by verilog, as /*>>>*/
 ```
 
-### Bug in arithmetic shift
+### Bug
+
+```verilog
+wire [31:0] w_mem_wrdata = (instr_lw)?                                  r_mem_idata:
+                           (instr_lh  && r_load_store_addr[1]==0)?      {{32'd16{r_mem_idata[15]}},r_mem_idata[15:0]}:
+                           (instr_lh  && r_load_store_addr[1]==1)?      {{32'd16{r_mem_idata[31]}},r_mem_idata[31:16]}:
+                           (instr_lhu && r_load_store_addr[1]==0)?      {{32'd16{1'd0}},r_mem_idata[15:0]}:
+                           (instr_lhu && r_load_store_addr[1]==1)?      {{32'd16{1'd0}},r_mem_idata[31:16]}:
+                           (instr_lbu && r_load_store_addr[1:0]==2'b00)?{{32'd24{1'b0}},r_mem_idata[ 7: 0]}:
+                           (instr_lbu && r_load_store_addr[1:0]==2'b01)?{{32'd24{1'b0}},r_mem_idata[15: 8]}:
+                           (instr_lbu && r_load_store_addr[1:0]==2'b10)?{{32'd24{1'b0}},r_mem_idata[23:16]}:
+                           (instr_lbu && r_load_store_addr[1:0]==2'b10)?{{32'd24{1'b0}},r_mem_idata[31:24]}:        // should be 2'b11
+                           (instr_lb  && r_load_store_addr[1:0]==2'b00)?{{32'd24{r_mem_idata[ 7]}},r_mem_idata[ 7: 0]}:
+                           (instr_lb  && r_load_store_addr[1:0]==2'b01)?{{32'd24{r_mem_idata[15]}},r_mem_idata[15: 8]}:
+                           (instr_lb  && r_load_store_addr[1:0]==2'b10)?{{32'd24{r_mem_idata[23]}},r_mem_idata[23:16]}:
+                           (instr_lb  && r_load_store_addr[1:0]==2'b11)?{{32'd24{r_mem_idata[31]}},r_mem_idata[31:24]}:r_mem_idata;
+```
+
+diff:
+```
+< 3 0x80000578 (0x37714c03) x24 0x0802cb98
+---
+> 3 0x80000578 (0x37714c03) x24 0x00000008
+```
+
+diss:
+```
+80000568:	00610133          	add	sp,sp,t1  // Here read address 
+8000056c:	41710983          	lb	s3,1047(sp)
+80000570:	2fc12983          	lw	s3,764(sp)
+80000574:	01176e33          	or	t3,a4,a7
+80000578:	37714c03          	lbu	s8,887(sp)
+...
+8000de84:	cb98                	.2byte	0xcb98
+8000de86:	0802                	.2byte	0x802
+```
+spike.dump:
+```
+ 0x80000568 (0x00610133) x 2 0x8000db10
+```
+
+calc: 887(0x377) + 0x8000db10 = 
+
+Here thedefault case is assigned to ```w_mem_wrdata```, ```r_mem_idata```
