@@ -29,13 +29,25 @@ and s5,t1,s0
 
 When executing ```make all``` in the challenge2_loop directory, the ```spike``` command can only be aborted using the manual exit ```Ctrl+C```
 
-
+The problem is, that the function loop is never left in the inital setup. 
+Here is the proposed solution, decrement the "testcase-counter" stored in ```t5```, and jump to ```test_end``` once the counter reaches 0.
 ```assembly
-80000198:	00200193          	li	gp,2
-8000019c:	00002297          	auipc	t0,0x2\_layouts\15\spappbar.aspx
-800001a0:	e6428293          	addi	t0,t0,-412 # 80002000 <begin_signature>
-800001a4:	00300f13          	li	t5,3
+loop:
+  lw t1, (t0)
+  lw t2, 4(t0)
+  lw t3, 8(t0)
+  add t4, t1, t2
+  addi t0, t0, 12
+  addi t5, t5, -1         # decrement test counter
+  beqz t5 , test_end      # if end of data is reached, end loop
+  beq t3, t4, loop        # check if sum is correct
+  j fail
+
+test_end:
+
+TEST_PASSFAIL
 ```
+
 
 Output of spike for the  first loop execution:
 ```listing
@@ -49,103 +61,28 @@ core   0: 3 0 0x800001b4 (0x00730eb3) x29 0x00000000
 core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80003d1c
 ```
 
-Problem: The address of the .data region is not loaded correctly to ```t0/x5```. As the dissassembly shows, the expected value should be **0x80002000**. 
-```data
-Disassembly of section .data:
 
-80002000 <begin_signature>:
-80002000:	0020                	.2byte	0x20
-80002002:	0000                	.2byte	0x0
-80002004:	0020                	.2byte	0x20
-80002006:	0000                	.2byte	0x0
-80002008:	0040                	.2byte	0x40
-8000200a:	0000                	.2byte	0x0
-8000200c:	4078                	.2byte	0x4078
-8000200e:	344d0303          	lb	t1,836(s10)
-80002012:	5d70                	.2byte	0x5d70
-80002014:	74c5                	.2byte	0x74c5
-80002016:	cafe6073          	csrsi	0xcaf,28
-8000201a:	0000                	.2byte	0x0
-8000201c:	0001                	.2byte	0x1
-8000201e:	0000                	.2byte	0x0
-80002020:	caff                	.2byte	0xcaff
-```
-
-
-**Proposed changes**
-```assembler
-
-  la t0, test_cases
-  li t5, 3          # Number of testcases
-
-
-loop:
- lw t1, (t0)
-  lw t2, 4(t0)
-  lw t3, 8(t0)
-  add t4, t1, t2
-  addi t0, t0, 12
-  addi t5, t5, -1         # decrement test counter
-  beqz t5 , test_end      # if end of data is reached, end loop
-  beq t3, t4, loop        # check if sum is correct
-  j fail
-
-test_end:
-
-```
-
-
-To fix the above isue, the line ```.align 4``` i
-**Fixed output**
-```listing
-core   0: 3 0 0x80000198 (0x00200193) x3  0x00000002
-core   0: 3 0x800001a4 (0x00002297) x5  0x800021a4
-core   0: 3 0x800001a8 (0xe5c28293) x5  0x80002000
-core   0: 3 0 0x800001a4 (0x00300f13) x30 0x00000003
-core   0: 3 0 0x800001a8 (0x0002a303) x6  0x00000020 mem 0x80002000
-core   0: 3 0 0x800001ac (0x0042a383) x7  0x00000020 mem 0x80002004
-core   0: 3 0 0x800001b0 (0x0082ae03) x28 0x00000040 mem 0x80002008
-core   0: 3 0 0x800001b4 (0x00730eb3) x29 0x00000040
-core   0: 3 0 0x800001b8 (0x00c28293) x5  0x8000200c
-core   0: 3 0 0x800001bc (0xffde06e3)
-core   0: 3 0 0x800001a8 (0x0002a303) x6  0x03034078 mem 0x8000200c
-core   0: 3 0 0x800001ac (0x0042a383) x7  0x5d70344d mem 0x80002010
-core   0: 3 0 0x800001b0 (0x0082ae03) x28 0x607374c5 mem 0x80002014
-core   0: 3 0 0x800001b4 (0x00730eb3) x29 0x607374c5
-core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80002018
-core   0: 3 0 0x800001bc (0xffde06e3)
-core   0: 3 0 0x800001a8 (0x0002a303) x6  0x0000cafe mem 0x80002018
-core   0: 3 0 0x800001ac (0x0042a383) x7  0x00000001 mem 0x8000201c
-core   0: 3 0 0x800001b0 (0x0082ae03) x28 0x0000caff mem 0x80002020
-core   0: 3 0 0x800001b4 (0x00730eb3) x29 0x0000caff
-core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80002024
-core   0: 3 0 0x800001bc (0xffde06e3)
-core   0: 3 0 0x800001a8 (0x0002a303) x6  0x00000000 mem 0x80002024
-core   0: 3 0 0x800001ac (0x0042a383) x7  0x00000000 mem 0x80002028
-core   0: 3 0 0x800001b0 (0x0082ae03) x28 0x00000000 mem 0x8000202c
-core   0: 3 0 0x800001b4 (0x00730eb3) x29 0x00000000
-core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80002030
-```
 
 The values of ```x28``` and ```x29``` are compared in the loop, then the address in ```t0/x5``` is incremented, to check the next data pair.
 
 
 ### challenge3_illegal
 
-The implementation of the '''mtvec_handler''' misses, that the '''mepc'''-CSR register still holds the address of the illegal instruction. After the '''mret''', there is no call to the '''pass''' function. 
-As the test is completed however with the call to the '''mtvec_handler''', the '''mepc'' register can be written to contain the address of '''pass'''
+The implementation of the ```mtvec_handler``` misses, that the ```mepc```CSR register still holds the address of the illegal instruction. After the ```mret``` instruction is called, there is no call to the ```test_end``` function. 
+As the test is completed and passed with the call to the ```mtvec_handler``` the ```mepc``` register can be written to contain the address of ```test_end```
+The following listing shows the modified testcase:
 
-```assembler
-  .align 2
-  .option norvc
+```assembly
+.align 2
+.option norvc
 
-  li TESTNUM, 2
+li TESTNUM, 2
 illegal_instruction:
   .word 0              
   j fail
-  
-  .align 4
-  .global mtvec_handler
+
+.align 4
+.global mtvec_handler
 mtvec_handler:
   li t1, CAUSE_ILLEGAL_INSTRUCTION
   csrr t0, mcause
@@ -154,17 +91,18 @@ mtvec_handler:
   la t1, illegal_instruction  # load actual address of illegal_instruction
   bne t0, t1, fail            # check that cause for trap was our illegal instruction
   la t0, test_end             # load address of test_end
-  csrw mepc, t0;              # set mepc to test_end, to pass test
+  csrw mepc, t0              # set mepc to test_end, to pass test
   mret
 
 
 test_end:
 
-TEST_PASSFAIL
+  TEST_PASSFAIL
 ```
 
 At 0x800001fc, the '''mret''' instruction is called, returning from the '''mtvec_handler'''. The next instuction is called from 0x800001cc, the first line of '''pass'''. After completing this function, the '''trap_vector''' is called again, this time continuing to '''write_tohost''', indicating to the host, that the test was passed successfully and the illegal instruction was processed as expected.
-```
+
+```assembly
 core   0: 3 0x800001ec (0x341022f3) x5  0x800001a4
 core   0: 3 0x800001f0 (0x00000297) x5  0x800001f0
 core   0: 3 0x800001f4 (0xfdc28293) x5  0x800001cc
@@ -187,7 +125,7 @@ core   0: 3 0x80000048 (0x00001f17) x30 0x80001048
 core   0: 3 0x8000004c (0xfa0f2e23) mem 0x80001004 0x00000000
 ```
 
-```
+```assembly
 800001e0 <mtvec_handler>:
 800001e0:	00200313          	li	t1,2
 800001e4:	342022f3          	csrr	t0,mcause
@@ -249,7 +187,7 @@ isa-instruction-distribution:
 ```
 
 This generates instructions for the riscv64, e.g.
-```assembler
+```assembly
 test.S: Assembler messages:
 test.S:156: Error: unrecognized opcode `divuw s4,a3,t4'
 test.S:157: Error: unrecognized opcode `remw s6,s6,s11'
