@@ -3,7 +3,7 @@
 ## Challenge Level 1
 
 ### challenge1_logical
-
+Initial behavior: '''make all''' produces the following ouput on the compile stage:
 Output of compile:
 ```assembly
 test.S: Assembler messages:
@@ -12,12 +12,13 @@ test.S:25584: Error: illegal operands `andi s5,t1,s0'![image](https://github.com
 ```
 **Proposed changes**
 
-Cause of Error in line test.S:15855:  z4 is not a CPU register. Can be fixed by using t4 for example
+Cause of Error in line test.S:15855:  ```z4``` is not a valid CPU register. The instruction can be fixed by using a valid register, for example ```t4```:
 ```assembly
 and s7,ra,t4
 ```
 
-Cause of Error in line test.S:25584: **addi** requires an immidiate value, instead of two registers. As all other instructions in the test are **add** instructions, this is most likely a typo:
+Cause of Error in line test.S:25584: **andi** requires an immidiate value, not two registers. As all other instructions in the test are **and** instructions, this is most likely a typo-error
+The Error can therefore be fixed by using the **and** instriction:
 ```assembly
 and s5,t1,s0
 ```
@@ -26,9 +27,10 @@ and s5,t1,s0
 
 ### challenge2_loop
 
+When eexecuting '''make all''' in the challenge2_loop directory, the '''spike''' command can only be aborted using the manual exit '''Ctrl+C'''.
 
 
-```listing
+```assembly
 80000198:	00200193          	li	gp,2
 8000019c:	00002297          	auipc	t0,0x2\_layouts\15\spappbar.aspx
 800001a0:	e6428293          	addi	t0,t0,-412 # 80002000 <begin_signature>
