@@ -22,7 +22,7 @@ spike: compile
 
 sim: spike
 	@echo '[UpTickPro] Simulation ------'
-	elf2hex  4  8388608 test.elf 2147483648 > code.mem
+	elf2hex  4  1048576 test.elf 2147483648 > code.mem
 	cp code.mem ../planigale_riscv/firmware/firmware_mem.hex
 	cp ../riscv/boot.LSB ../planigale_riscv/firmware/start_mem.hex
 	make -C ../planigale_riscv sim_extern
