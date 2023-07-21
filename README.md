@@ -8,7 +8,7 @@ Output of compile:
 ```assembly
 test.S: Assembler messages:
 test.S:15855: Error: illegal operands `and s7,ra,z4'
-test.S:25584: Error: illegal operands `andi s5,t1,s0'![image](https://github.com/vyomasystems-lab/riscv-ctb-challenge-S34m1n4t0r/assets/81908108/bf85bf45-e6ef-454f-b3bd-ad98c666cd91)
+test.S:25584: Error: illegal operands `andi s5,t1,s0'
 ```
 **Proposed changes**
 
