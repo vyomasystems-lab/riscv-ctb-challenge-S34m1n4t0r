@@ -3,7 +3,7 @@
 ## Challenge Level 1
 
 ### challenge1_logical
-Initial behavior: '''make all''' produces the following ouput on the compile stage:
+Initial behavior: ```make all``` produces the following ouput on the compile stage:
 Output of compile:
 ```assembly
 test.S: Assembler messages:
@@ -27,7 +27,7 @@ and s5,t1,s0
 
 ### challenge2_loop
 
-When executing '''make all''' in the challenge2_loop directory, the '''spike''' command can only be aborted using the manual exit '''Ctrl+C'''.
+When executing ```make all``` in the challenge2_loop directory, the ```spike``` command can only be aborted using the manual exit ```Ctrl+C```
 
 
 ```assembly
