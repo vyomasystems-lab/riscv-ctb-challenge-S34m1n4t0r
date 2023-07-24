@@ -1,11 +1,15 @@
 # riscv_ctb_challenges
 
-## References
-[challenge-level-1](-challenge-level-1)
+## Challenge Overview
+***Level 1***
+- [challenge1_logical](#challenge1_logical)
+- [challenge2_loop](#challenge2_loop)
+- [challenge3_illegal](#challenge3_illegal)
 
-## Challenge Level 1
-
-### challenge1_logical
+***Level 2***
+- [challenge1_instructions](#challenge1_instructions)
+- [challenge2_exceptions](#challenge2_exceptions)
+# challenge1_logical 
 Initial behavior: ```make all``` produces the following ouput on the compile stage:
 Output of compile:
 ```assembly
@@ -28,7 +32,7 @@ and s5,t1,s0
 
 
 
-### challenge2_loop
+# challenge2_loop
 
 When executing ```make all``` in the challenge2_loop directory, the ```spike``` command can only be aborted using the manual exit ```Ctrl+C```
 
@@ -69,7 +73,7 @@ core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80003d1c
 The values of ```x28``` and ```x29``` are compared in the loop, then the address in ```t0/x5``` is incremented, to check the next data pair.
 
 
-### challenge3_illegal
+# challenge3_illegal
 
 The implementation of the ```mtvec_handler``` misses, that the ```mepc```CSR register still holds the address of the illegal instruction. After the ```mret``` instruction is called, there is no call to the ```test_end``` function. 
 As the test is completed and passed with the call to the ```mtvec_handler``` the ```mepc``` register can be written to contain the address of ```test_end```
@@ -147,9 +151,9 @@ core   0: 3 0x8000004c (0xfa0f2e23) mem 0x80001004 0x00000000
 800001d8:	00000513          	li	a0,0
 800001dc:	00000073          	ecall
 ```
-## challenge_level2
+# challenge_level2
 
-## challenge1_instructions
+# challenge1_instructions
 
 
 ```python
@@ -198,7 +202,7 @@ test.S:157: Error: unrecognized opcode `remw s6,s6,s11'
 ```
 
 
-### challenge2_exceptions
+# challenge2_exceptions
 
 ```python
 # ---------------------------------------------------------------------------------
