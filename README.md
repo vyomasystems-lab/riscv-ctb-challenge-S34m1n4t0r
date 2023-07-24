@@ -9,6 +9,13 @@
 ***Level 2***
 - [challenge1_instructions](#challenge1_instructions)
 - [challenge2_exceptions](#challenge2_exceptions)
+
+***Level 3***
+
+- [challenge3_arithmetic](#challenge3_arithmetic)
+- [challenge3_loadbyte](#challenge3_loadbyte)
+- [challenge3_csrs](#challenge3_csrs)
+
 # challenge1_logical 
 Initial behavior: ```make all``` produces the following ouput on the compile stage:
 Output of compile:
@@ -244,7 +251,7 @@ wc -l exceptions.log
 
 ## challenge3_planigale_riscv
 
-### Bug in arithmetic shift
+# challenge3_arithmetic
 
 ```verilog
  wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >> r_op2[4:0]);   //arithmetic shift with deliberate bug
@@ -278,7 +285,7 @@ Correct it has to be:
  wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >>> r_op2[4:0]);   //arithmetic shift operation is suplied by verilog, as /*>>>*/
 ```
 
-### Bug
+# challenge3_loadbyte
 
 ```verilog
 wire [31:0] w_mem_wrdata = (instr_lw)?                                  r_mem_idata:
@@ -322,3 +329,6 @@ spike.dump:
 calc: 887(0x377) + 0x8000db10 = 
 
 Here thedefault case is assigned to ```w_mem_wrdata```, ```r_mem_idata```
+
+
+# challenge3_csrs
