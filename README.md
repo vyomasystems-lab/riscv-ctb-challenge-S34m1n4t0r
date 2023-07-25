@@ -332,3 +332,13 @@ Here thedefault case is assigned to ```w_mem_wrdata```, ```r_mem_idata```
 
 
 # challenge3_csrs
+
+
+```verilog
+    if (instr_csrrw||instr_csrrwi) begin
+      r_cpu_wr_dat <= w_csr_data;
+      r_csr_wr_data <= (instr_csrrw) ? r_op1: {27'b0,decoded_uimm};
+      r_cpu_wr <= (r_instr_rd!=0) ? 1 : 0;
+      r_csr_wr_en <= (instr_csrrw&&w_instr_rs1!=0))? 1 : (instr_csrrwi&&decoded_uimm!=0) ? 1 : 0; //Error
+  end
+```
