@@ -383,4 +383,4 @@ spike.dump:
 ```
 
 
-![image](csr:instructions) [1]
+![image](doc/csr_instructions.png) [1]
