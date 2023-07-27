@@ -339,6 +339,48 @@ Here thedefault case is assigned to ```w_mem_wrdata```, ```r_mem_idata```
       r_cpu_wr_dat <= w_csr_data;
       r_csr_wr_data <= (instr_csrrw) ? r_op1: {27'b0,decoded_uimm};
       r_cpu_wr <= (r_instr_rd!=0) ? 1 : 0;
-      r_csr_wr_en <= (instr_csrrw&&w_instr_rs1!=0))? 1 : (instr_csrrwi&&decoded_uimm!=0) ? 1 : 0; //Error
+      r_csr_wr_en <= (instr_csrrw&&w_instr_rs1!=0)? 1 : (instr_csrrwi&&decoded_uimm!=0) ? 1 : 0; //Error
   end
 ```
+
+Difference in traces:
+```assembler
+< 3 0x80001488 (0x3402f8f3) x17 0x0000001a
+< 3 0x8000148c (0x340ea673) x12 0x0000001a
+< 3 0x80001490 (0x34033873) x16 0x0000001a
+< 3 0x80001494 (0x34095cf3) x25 0x00000018
+---
+> 3 0x80001488 (0x3402f8f3) x17 0x00000000
+> 3 0x8000148c (0x340ea673) x12 0x00000000
+> 3 0x80001490 (0x34033873) x16 0x00000010
+> 3 0x80001494 (0x34095cf3) x25 0x00000010
+```
+
+test.diss
+```assembly
+80001480 <i00000003ea>:
+80001480:	340416f3          	csrrw	a3,mscratch,s0
+
+80001484 <i00000003eb>:
+80001484:	340011f3          	csrrw	gp,mscratch,zero
+
+80001488 <i00000003ec>:
+80001488:	3402f8f3          	csrrci	a7,mscratch,5
+
+8000148c <i00000003ed>:
+8000148c:	340ea673          	csrrs	a2,mscratch,t4
+```
+
+spike.dump:
+```
+3 0x80001478 (0x34016873) x16 0x00000000
+3 0x8000147c (0x340028f3) x17 0x00000002
+3 0x80001480 (0x340416f3) x13 0x00000002
+3 0x80001484 (0x340011f3) x 3 0x0000001a
+3 0x80001488 (0x3402f8f3) x17 0x00000000
+3 0x8000148c (0x340ea673) x12 0x00000000
+3 0x80001490 (0x34033873) x16 0x00000010
+```
+
+
+![image](csr:instructions) [1]
