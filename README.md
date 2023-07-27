@@ -383,4 +383,12 @@ spike.dump:
 ```
 
 
-![image](doc/csr_instructions.png) [1]
+![image](doc/csr_instructions.png) 
+
+CSR command operation reference [1]
+
+
+
+### References
+
+[1] [RISCV Reference: https://riscv.org/technical/specifications/](https://riscv.org/technical/specifications/) 2023
