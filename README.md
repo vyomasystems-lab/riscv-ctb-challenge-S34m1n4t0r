@@ -1,5 +1,5 @@
 # riscv_ctb_challenges
-This file contains the result description for the RISC-V CTB Hackathon 2023. Th following section links to the description of each of the presented challenges. For the third challenge level, a custom design was used, the planigale-riscv [[5](#References)] . The design is a RV32I compliant implementation, as verified in the third challenge and supports the M-mode.
+This file contains the result description for the RISC-V CTB Hackathon 2023. Th following section links to the description of each of the presented challenges. For the third challenge level, a custom design was used, the planigale-riscv [[5](#References)] . The design is a RV32I compliant implementation, as verified in the third challenge and supports the M-mode. [[2](#References)]
 
 ## Challenge Overview
 ***Level 1***
