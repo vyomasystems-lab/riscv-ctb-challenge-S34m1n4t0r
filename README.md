@@ -241,9 +241,9 @@ isa-instruction-distribution:
 # challenge2_exceptions
 
 The second challenge of the second level is to generate a test case which causes **10 illegal instruction errors**.
-However the provided folder structure only features a [Makefile](challenge_level2/challenge2_exceptions/Makefile), which features a ```gen``` stage. Therefore a **yaml**-file is created to generate the test case file. 
+However the provided folder structure only features a [Makefile](challenge_level2/challenge2_exceptions/Makefile), which features a ```gen``` stage. Therefore the **yaml**-file was copied from the challenge1_instructions to generate the test case file. 
 
-To generate **illegal instruction errors**, it is important to know, that the **cause**-value assigned to this error is **2** [2]. Whith this information, the following addition to a default **yaml** file can be made:
+To generate **illegal instruction errors**, it is important to know, that the **cause**-value assigned to this error is **2** [2]. With this information, the following addition to a default **yaml** file can be made:
 
 ```python
 # ---------------------------------------------------------------------------------
