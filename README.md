@@ -288,13 +288,29 @@ wc -l exceptions.log
 # level3_planigale_riscv
 For the third challenge level, the [planigale-riscv](https://gitlab.com/S34m1n4t0r/planigale_riscv.git) cpu was selected. 
 With a chosen design, three errors are required to be detected with a test case each. The errors that were introduced for this purpose are described for each of the three bugs, as well as the steps taken to discover them. 
-The used test-setup to expose the bugs is the [random_test](challenge_level3/random_test/) using the aapg framework for all three bugs.
+The used test-setup to expose the bugs is the [random_test folder](challenge_level3/random_test/) using the aapg framework for all three bugs.
 # challenge1_arithmetic
 
+The first bug to be inserted into the design is a faulty implementation of the arithmetic shift operation. The difference to the normal shift operation is that the sign is kept for the arithmetic shift. The verilog language features a special operator for this purpose ```>>>```. 
+The injected fault is the reduction to a regular shift operator, ```>>``` in verilog. The following snipped shows the changed line of the ALU result wires:
+
 ```verilog
- wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >> r_op2[4:0]);   //arithmetic shift with deliberate bug
+ wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >> r_op2[4:0]);   //faulty arithmetic shift
 ```
-```test.disass:```
+
+If the ```make compare``` command is run, the ```diff``` command now shows differences for other than the init code. (The planigale-riscv has a PC default value of **0x00000000**, leading to difference to the spike simulator output until a jump to address **0x80000000** is conducted)
+
+The following occurance of the detected difference shall be analysed:
+
+```assembly
+< 3 0x80001940 (0x4186d413) x 8 0x000000ed
+---
+> 3 0x80001940 (0x4186d413) x 8 0xffffffed  
+```
+
+As the **diff** shows, the spike output "fills up" the result of the shift operation with **1s**. The **dissassembly** ```test.disass``` displays the operation that does not produce the expected output. ```srai s0, a3, 0x18``` is the instruction that produces the difference. To understand what goes wrong in the operation, the instruction at address 0x80001938 is necessary, as well as the trace output of this operation, as it loads a value to the cpu register ```a3```. This loaded value is then shifted by an amount of ```0x18 / 24``` by the analysed operation. The value stored in ```a3``` is **0xed960938** which has a leading "1". Therefore the arithmetic shift operation is expected to "fill up" the result stored to ```s0```.
+
+This shows how the bug in the design could be found using the comparison with the spike simulator output and pinpointed to the implementation of the arithmetic shift ALU result.
 ```
 80001938 <i00000001d1>:
 80001938:	6d95f697          	auipc	a3,0x6d95f
@@ -312,18 +328,15 @@ The used test-setup to expose the bugs is the [random_test](challenge_level3/ran
 3 0x8000193c (0x3cdabc13) x24 0x00000001
 3 0x80001940 (0x4186d413) x 8 0x000000ed
 ```
-```diff:```
-```
-< 3 0x80001940 (0x4186d413) x 8 0x000000ed
----
-> 3 0x80001940 (0x4186d413) x 8 0xffffffed
-```
-Correct it has to be:
+
+The correct implementation of the ALU arithmetic shift is listed here for completeness of the documentation:
 ```verilog
- wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >>> r_op2[4:0]);   //arithmetic shift operation is suplied by verilog, as /*>>>*/
+ wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >>> r_op2[4:0]);   //correct arithmetic shift operation 
 ```
 
 # challenge2_loadbyte
+
+The second bug introduced into the planigale riscv is an error in the deciphering of the ```lbu``` instruction, which could occur due to a typo in the wire assignment in the read-back data. The ```wire w_mem_wrdata``` shows the part of the ```r_mem_idata``` register, which in turn is loaded with the input data to the planigale-riscv if the setup memory address ```mem_addr```.  
 
 ```verilog
 wire [31:0] w_mem_wrdata = (instr_lw)?                                  r_mem_idata:
@@ -341,14 +354,21 @@ wire [31:0] w_mem_wrdata = (instr_lw)?                                  r_mem_id
                            (instr_lb  && r_load_store_addr[1:0]==2'b11)?{{32'd24{r_mem_idata[31]}},r_mem_idata[31:24]}:r_mem_idata;
 ```
 
+With the bug introduced into the design, the following diff was produced using the ```make compare``` command. The output of the ```diff``` command shows a mismatch for the instruction at address **0x80000578**.
+
 diff:
 ```
 < 3 0x80000578 (0x37714c03) x24 0x0802cb98
 ---
 > 3 0x80000578 (0x37714c03) x24 0x00000008
 ```
+Analysing the disassembly to find out which instruction causes the mismatch leads to the instruction ```lbu	s8,887(sp)```. To understand the expected output of this operation, it is necessary to know the value held in ```sp```. 
+This is shown in the spike.dump output as **0x8000db10**. As the value of **887** is added to this value, the uppermost byte of the specified base-address(0x8000DE8**4**) shall be loaded to the ```s8``` register, which in this case is **0x08**. 
+The observed behavior of the planigale-riscv however is the load of the complete 32-bit value at address 0x8000DE8**4**. With this information the bug in the design can be searched and will lead to the detection of the fault in the 
+```wire w_mem_wrdata ```
 
-diss:
+
+```disassembly```:
 ```
 80000568:	00610133          	add	sp,sp,t1  // Here read address 
 8000056c:	41710983          	lb	s3,1047(sp)
@@ -359,15 +379,10 @@ diss:
 8000de84:	cb98                	.2byte	0xcb98
 8000de86:	0802                	.2byte	0x802
 ```
-spike.dump:
+```spike.dump``` of the memory value stored ad address **0x8000DE84**
 ```
  0x80000568 (0x00610133) x 2 0x8000db10
 ```
-
-calc: 887(0x377) + 0x8000db10 = 
-
-Here thedefault case is assigned to ```w_mem_wrdata```, ```r_mem_idata```
-
 
 # challenge3_csrs
 
