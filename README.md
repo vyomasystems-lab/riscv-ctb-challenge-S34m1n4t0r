@@ -1,4 +1,6 @@
 # riscv_ctb_challenges
+This file contains the result description for the RISC-V CTB Hackathon 2023. Th following section links to the description of each of the presented challenges. For the third challenge level, a custom design was used, the planigale-riscv. The design is a RV32I compliant implementation, as verified in the third challenge and supports the M-mode.
+
 
 ## Challenge Overview
 ***Level 1***
@@ -17,7 +19,7 @@
 - [challenge3_csrs](#challenge3_csrs)
 
 # challenge1_logical 
-Initial behavior: ```make all``` produces the following ouput on the compile stage:
+The initial behavior of the ```make all``` command in the given challenge folder produces the following output and errors for the compile stage:
 Output of compile:
 ```assembly
 test.S: Assembler messages:
@@ -382,13 +384,19 @@ spike.dump:
 3 0x80001490 (0x34033873) x16 0x00000010
 ```
 
-
+The following table shows whether a CSR instruction reads or writes a given CSR. The ```CSRRS``` and
+```CSRRC``` instructions have same behavior so are shown as ```CSRRS/C``````. [[1](#References)]
 ![image](doc/csr_instructions.png) 
 
-CSR command operation reference [1]
+
+## Acknowledgments
 
 
 
-### References
+# References
 
-[1] [RISCV Reference: https://riscv.org/technical/specifications/](https://riscv.org/technical/specifications/) 2023
+- [1] [RISC-V-Specification: Volume 1, Unprivileged Specification version 20191213](https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf)
+
+
+- [2] [RISC-V-Specification: Volume 2, Privileged Specification version 20211203](https://github.com/riscv/riscv-isa-manual/releases/download/Priv-v1.12/riscv-privileged-20211203.pdf)
+
