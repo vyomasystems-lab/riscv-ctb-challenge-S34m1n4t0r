@@ -15,7 +15,7 @@ This file contains the result description for the RISC-V CTB Hackathon 2023. Th 
 
 - [challenge1_arithmetic](#challenge1_arithmetic)
 - [challenge2_loadbyte](#challenge2_loadbyte)
-- [challenge3_csrs](#challenge3_csrs)
+- [challenge3_csrw](#challenge3_csrw)
 
 # Challenge_level1
 
@@ -384,7 +384,7 @@ The observed behavior of the planigale-riscv however is the load of the complete
  0x80000568 (0x00610133) x 2 0x8000db10
 ```
 
-# challenge3_csrs
+# challenge3_csrw
 
 The third and final bug introduced to the planigale-riscv is an error in the implementation og the ```csrw/csrwi``` instructions. 
 The following table taken from [[1](#References)] shows whether a CSR instruction reads or writes a given CSR. It shows, that the ```csrw/csrwi``` instructions write a given CSR even if the register ```rs1``` points to the ```x0``` register.
