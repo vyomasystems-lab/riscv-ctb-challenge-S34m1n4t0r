@@ -1,7 +1,6 @@
 # riscv_ctb_challenges
 This file contains the result description for the RISC-V CTB Hackathon 2023. Th following section links to the description of each of the presented challenges. For the third challenge level, a custom design was used, the planigale-riscv. The design is a RV32I compliant implementation, as verified in the third challenge and supports the M-mode.
 
-
 ## Challenge Overview
 ***Level 1***
 - [challenge1_logical](#challenge1_logical)
@@ -14,39 +13,49 @@ This file contains the result description for the RISC-V CTB Hackathon 2023. Th 
 
 ***Level 3***
 
-- [challenge3_arithmetic](#challenge3_arithmetic)
-- [challenge3_loadbyte](#challenge3_loadbyte)
+- [challenge1_arithmetic](#challenge1_arithmetic)
+- [challenge2_loadbyte](#challenge2_loadbyte)
 - [challenge3_csrs](#challenge3_csrs)
+
+# Challenge_level1
 
 # challenge1_logical 
 The initial behavior of the ```make all``` command in the given challenge folder produces the following output and errors for the compile stage:
-Output of compile:
+
 ```assembly
 test.S: Assembler messages:
 test.S:15855: Error: illegal operands `and s7,ra,z4'
 test.S:25584: Error: illegal operands `andi s5,t1,s0'
 ```
-**Proposed changes**
 
-Cause of Error in line test.S:15855:  ```z4``` is not a valid CPU register. The instruction can be fixed by using a valid register, for example ```t4```:
+Cause of Error in line test.S:15855: 
+
+ ```z4``` is not a valid CPU register. the ```and``` instruction takes two registers as input and writes the result to the given output. The line can be fixed by using a valid register, for example ```t4```:
 ```assembly
 and s7,ra,t4
 ```
 
-Cause of Error in line test.S:25584: **andi** requires an immidiate value, not two registers. As all other instructions in the test are **and** instructions, this is most likely a typo-error
-The Error can therefore be fixed by using the **and** instriction:
+Cause of Error in line test.S:25584:
+
+ ```andi``` requires an immediate value, not two input registers as the ```and``` instruction. As all other instructions in the test are ```and``` instructions, this is most likely a typo-error in the test.
+
+The Error can therefore be fixed by using the ```and``` instruction:
 ```assembly
 and s5,t1,s0
 ```
+
+These two changes fix the test execution. The updated file can be is located [here](challenge_level1/challenge1_logical/test.S).
 
 
 
 # challenge2_loop
 
-When executing ```make all``` in the challenge2_loop directory, the ```spike``` command can only be aborted using the manual exit ```Ctrl+C```
+When executing ```make all``` in the challenge2_loop directory, the ```spike``` command can only be aborted using the manual exit ```Ctrl+C```.
 
-The problem is, that the function loop is never left in the inital setup. 
-Here is the proposed solution, decrement the "testcase-counter" stored in ```t5```, and jump to ```test_end``` once the counter reaches 0.
+The root cause of this is, that the function loop is never exited in the given test case.
+As the input data for the loop features three data pairs, and cpu register ```t5``` is loaded with the value of three before entering the loop function, what misses in the loop is a branch statement as soon as all data is compared.
+
+Here is the proposed solution, decrement the **testcase-counter variable** stored in ```t5```, and jump to ```test_end``` once the counter reaches **0**.
 ```assembly
 loop:
   lw t1, (t0)
@@ -64,8 +73,7 @@ test_end:
 TEST_PASSFAIL
 ```
 
-
-Output of spike for the  first loop execution:
+The following spike output shows the traces of the first loop execution, which helped identify the root cause of the error:
 ```listing
 code
 core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80003d10
@@ -78,15 +86,13 @@ core   0: 3 0 0x800001b8 (0x00c28293) x5  0x80003d1c
 ```
 
 
-
 The values of ```x28``` and ```x29``` are compared in the loop, then the address in ```t0/x5``` is incremented, to check the next data pair.
 
+The fixed test case file can be found [here](challenge_level1/challenge2_loop/test.S).
 
 # challenge3_illegal
 
-The implementation of the ```mtvec_handler``` misses, that the ```mepc```CSR register still holds the address of the illegal instruction. After the ```mret``` instruction is called, there is no call to the ```test_end``` function. 
-As the test is completed and passed with the call to the ```mtvec_handler``` the ```mepc``` register can be written to contain the address of ```test_end```
-The following listing shows the modified testcase:
+The provided test case does not provide a call to the **pass** function meaning that the test cannot be completed correctly, even if the behavior matches the expectations. Therefore the proposed improvement of the test case features a check in the ```mtvec_handler``` that the address that caused the interrupt is the ```illegal_instruction```. If so, the ```test_end```-address is loaded to the ```mepc``` register, so that after exiting the interrupt handler, the ```pass``` function is called. This leads to the correct behavior of the test case:
 
 ```assembly
 .align 2
@@ -116,7 +122,8 @@ test_end:
   TEST_PASSFAIL
 ```
 
-At 0x800001fc, the '''mret''' instruction is called, returning from the '''mtvec_handler'''. The next instuction is called from 0x800001cc, the first line of '''pass'''. After completing this function, the '''trap_vector''' is called again, this time continuing to '''write_tohost''', indicating to the host, that the test was passed successfully and the illegal instruction was processed as expected.
+At 0x800001fc, the ```mret``` instruction is called, returning from the ```mtvec_handler```. The next instruction is called from 0x800001cc, the first line of ```pass```. After completing this function, the ```trap_vector``` is called again, this time continuing to ```write_tohost```, indicating to the host, that the test was passed successfully and the illegal instruction was processed as expected.
+The following section shows the trace of the spike simulation:
 
 ```assembly
 core   0: 3 0x800001ec (0x341022f3) x5  0x800001a4
@@ -141,6 +148,8 @@ core   0: 3 0x80000048 (0x00001f17) x30 0x80001048
 core   0: 3 0x8000004c (0xfa0f2e23) mem 0x80001004 0x00000000
 ```
 
+The following section shows the disassembly of the proposed updated test case:
+
 ```assembly
 800001e0 <mtvec_handler>:
 800001e0:	00200313          	li	t1,2
@@ -160,10 +169,36 @@ core   0: 3 0x8000004c (0xfa0f2e23) mem 0x80001004 0x00000000
 800001d8:	00000513          	li	a0,0
 800001dc:	00000073          	ecall
 ```
-# challenge_level2
+The updated test case file can be found [here](challenge_level1/challenge3_illegal/test.S).
+
+# Challenge_level2
 
 # challenge1_instructions
 
+This challenge features the aapg python package, which can be used to generate test cases for the risc-v DUT. [3]
+
+The provided [configuration file](challenge_level2/challenge1_instructions/rv32i.yaml) however leads to the following error, when running the ```make all``` command:
+
+```assembly
+test.S: Assembler messages:
+test.S:156: Error: unrecognized opcode `divuw s4,a3,t4'
+test.S:157: Error: unrecognized opcode `remw s6,s6,s11'
+
+```
+
+When checking te RISC-V Specification [1], it can be seen, that the two opcodes are defined for the ```rv64i``` ISA.
+
+With this information the following statement in the **yaml**-file was identified:
+
+```python
+-instruction-distribution:
+  ...
+  rel_rv64m: 10
+  ...
+```
+This line adds a certain percentage of ```rv64i``` opcodes to the generated test.
+
+The corrected file can be found [here](challenge_level2/challenge1_instructions/rv32i.yaml), and the changed line are shown in the following snipped:
 
 ```python
 isa-instruction-distribution:
@@ -202,16 +237,13 @@ isa-instruction-distribution:
   rel_rv64d: 0
 ```
 
-This generates instructions for the riscv64, e.g.
-```assembly
-test.S: Assembler messages:
-test.S:156: Error: unrecognized opcode `divuw s4,a3,t4'
-test.S:157: Error: unrecognized opcode `remw s6,s6,s11'
-
-```
-
 
 # challenge2_exceptions
+
+The second challenge of the second level is to generate a test case which causes **10 illegal instruction errors**.
+However the provided folder structure only features a [Makefile](challenge_level2/challenge2_exceptions/Makefile), which features a ```gen``` stage. Therefore a **yaml**-file is created to generate the test case file. 
+
+To generate **illegal instruction errors**, it is important to know, that the **cause**-value assigned to this error is **2** [2]. Whith this information, the following addition to a default **yaml** file can be made:
 
 ```python
 # ---------------------------------------------------------------------------------
@@ -235,7 +267,9 @@ exception-generation:
   ecause14: 0
 ```
 
-Output of '''make all'''
+With the now present [yaml-file](challenge_level2/challenge2_exceptions/rv32i.yaml), the output of ```make check```
+ produces the following output of illegal instruction exceptions, showing the required 10 exceptions:
+
 ```assembler
 core   0: exception trap_illegal_instruction, epc 0x800004ec
 core   0: exception trap_illegal_instruction, epc 0x8000052c
@@ -251,9 +285,11 @@ wc -l exceptions.log
 10 exceptions.log
 ```
 
-## challenge3_planigale_riscv
-
-# challenge3_arithmetic
+# level3_planigale_riscv
+For the third challenge level, the [planigale-riscv](https://gitlab.com/S34m1n4t0r/planigale_riscv.git) cpu was selected. 
+With a chosen design, three errors are required to be detected with a test case each. The errors that were introduced for this purpose are described for each of the three bugs, as well as the steps taken to discover them. 
+The used test-setup to expose the bugs is the [random_test](challenge_level3/random_test/) using the aapg framework for all three bugs.
+# challenge1_arithmetic
 
 ```verilog
  wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >> r_op2[4:0]);   //arithmetic shift with deliberate bug
@@ -287,7 +323,7 @@ Correct it has to be:
  wire [31:0]alu_shra = ($signed({r_op1[31:0]}) >>> r_op2[4:0]);   //arithmetic shift operation is suplied by verilog, as /*>>>*/
 ```
 
-# challenge3_loadbyte
+# challenge2_loadbyte
 
 ```verilog
 wire [31:0] w_mem_wrdata = (instr_lw)?                                  r_mem_idata:
@@ -391,7 +427,7 @@ The following table shows whether a CSR instruction reads or writes a given CSR.
 
 ## Acknowledgments
 
-
+I would like to thank the initiators of the CTB 2023 for carrying out this event. The introduction to the aapg-repository has led to identifying errors in the plaigale-riscv. The [CSR-Error](#challenge3_csrs) was a bug that was acutally present in the planigale-riscv, and could be solved during the hackathon.
 
 # References
 
@@ -400,3 +436,4 @@ The following table shows whether a CSR instruction reads or writes a given CSR.
 
 - [2] [RISC-V-Specification: Volume 2, Privileged Specification version 20211203](https://github.com/riscv/riscv-isa-manual/releases/download/Priv-v1.12/riscv-privileged-20211203.pdf)
 
+- [3] [AAPG](link-to-aapg)
