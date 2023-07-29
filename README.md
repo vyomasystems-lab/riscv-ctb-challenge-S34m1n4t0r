@@ -386,7 +386,7 @@ The observed behavior of the planigale-riscv however is the load of the complete
 
 # challenge3_csrw
 
-The third and final bug introduced to the planigale-riscv is an error in the implementation og the ```csrw/csrwi``` instructions. 
+The third and final bug introduced to the planigale-riscv is an error in the implementation of the ```csrw/csrwi``` instructions. 
 The following table taken from [[1](#References)] shows whether a CSR instruction reads or writes a given CSR. It shows, that the ```csrw/csrwi``` instructions write a given CSR even if the register ```rs1``` points to the ```x0``` register.
 
 ![image](doc/csr_instructions.png) 
