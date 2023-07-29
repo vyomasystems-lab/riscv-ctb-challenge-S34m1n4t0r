@@ -1,5 +1,5 @@
 # riscv_ctb_challenges
-This file contains the result description for the RISC-V CTB Hackathon 2023. Th following section links to the description of each of the presented challenges. For the third challenge level, a custom design was used, the planigale-riscv. The design is a RV32I compliant implementation, as verified in the third challenge and supports the M-mode.
+This file contains the result description for the RISC-V CTB Hackathon 2023. Th following section links to the description of each of the presented challenges. For the third challenge level, a custom design was used, the planigale-riscv [[5](#References)] . The design is a RV32I compliant implementation, as verified in the third challenge and supports the M-mode.
 
 ## Challenge Overview
 ***Level 1***
@@ -50,7 +50,7 @@ These two changes fix the test execution. The updated file can be is located [he
 
 # challenge2_loop
 
-When executing ```make all``` in the challenge2_loop directory, the ```spike``` command can only be aborted using the manual exit ```Ctrl+C```.
+When executing ```make all``` in the challenge2_loop directory, the ```spike``` [[4](#References)] command can only be aborted using the manual exit ```Ctrl+C```.
 
 The root cause of this is, that the function loop is never exited in the given test case.
 As the input data for the loop features three data pairs, and cpu register ```t5``` is loaded with the value of three before entering the loop function, what misses in the loop is a branch statement as soon as all data is compared.
@@ -336,7 +336,7 @@ The correct implementation of the ALU arithmetic shift is listed here for comple
 
 # challenge2_loadbyte
 
-The second bug introduced into the planigale riscv is an error in the deciphering of the ```lbu``` instruction, which could occur due to a typo in the wire assignment in the read-back data. The ```wire w_mem_wrdata``` shows the part of the ```r_mem_idata``` register, which in turn is loaded with the input data to the planigale-riscv if the setup memory address ```mem_addr```.  
+The second bug introduced into the planigale-riscv is an error in the deciphering of the ```lbu``` instruction, which could occur due to a typo in the wire assignment in the read-back data. The ```wire w_mem_wrdata``` shows the part of the ```r_mem_idata``` register, which in turn is loaded with the input data to the planigale-riscv if the setup memory address ```mem_addr```.  
 
 ```verilog
 wire [31:0] w_mem_wrdata = (instr_lw)?                                  r_mem_idata:
@@ -386,7 +386,12 @@ The observed behavior of the planigale-riscv however is the load of the complete
 
 # challenge3_csrs
 
+The third and final bug introduced to the planigale-riscv is an error in the implementation og the ```csrw/csrwi``` instructions. 
+The following table taken from [[1](#References)] shows whether a CSR instruction reads or writes a given CSR. It shows, that the ```csrw/csrwi``` instructions write a given CSR even if the register ```rs1``` points to the ```x0``` register.
 
+![image](doc/csr_instructions.png) 
+
+The following behavior for the two instructions holds a bug however, that the write operation to the CSR is **not** conducted, if ```rs1``` points to the ```x0``` register.
 ```verilog
     if (instr_csrrw||instr_csrrwi) begin
       r_cpu_wr_dat <= w_csr_data;
@@ -396,7 +401,8 @@ The observed behavior of the planigale-riscv however is the load of the complete
   end
 ```
 
-Difference in traces:
+With the bug introduced into the design, the following diff was produced using the ```make compare``` command. The output of the ```diff``` command shows a mismatch for the instruction at address **0x80001488**:
+
 ```assembler
 < 3 0x80001488 (0x3402f8f3) x17 0x0000001a
 < 3 0x8000148c (0x340ea673) x12 0x0000001a
@@ -408,6 +414,10 @@ Difference in traces:
 > 3 0x80001490 (0x34033873) x16 0x00000010
 > 3 0x80001494 (0x34095cf3) x25 0x00000010
 ```
+
+Taking the ```disassembly``` for help, it can be derived that the instruction at address **0x80001488** loads the value held in the ```mscratch``` csr with a the cleared bitmask of **0x5**. (This has no effect on the value read in the faulty planigale-riscv as 0xA&~(0x5)=0xA)
+For the spike output, it is evident that the value stored in ```mscratch``` was either **0**, **1**, **4** or **5**. And as there was no difference detected for the instruction at address **0x80001484**, the mismatch has to occur in instrruction ```csrrw	gp,mscratch,zero```.
+Having isolated the mismatching behavior to a single instruction with given arguments, the designer shold be able to deriive where the error originates with the help of the specification [[1](#References)] .
 
 test.diss
 ```assembly
@@ -435,14 +445,11 @@ spike.dump:
 3 0x80001490 (0x34033873) x16 0x00000010
 ```
 
-The following table shows whether a CSR instruction reads or writes a given CSR. The ```CSRRS``` and
-```CSRRC``` instructions have same behavior so are shown as ```CSRRS/C``````. [[1](#References)]
-![image](doc/csr_instructions.png) 
 
 
 ## Acknowledgments
 
-I would like to thank the initiators of the CTB 2023 for carrying out this event. The introduction to the aapg-repository has led to identifying errors in the plaigale-riscv. The [CSR-Error](#challenge3_csrs) was a bug that was acutally present in the planigale-riscv, and could be solved during the hackathon.
+I would like to thank the initiators of the CTB 2023 for carrying out this event. The introduction to the aapg-repository [[3](#References)]  has led to identifying errors in the plaigale-riscv. The [CSR-Error](#challenge3_csrs) was a bug that was actually present in the planigale-riscv, and could be solved during the hackathon. In addition to that the participation has been an intersting experience.
 
 # References
 
@@ -451,4 +458,8 @@ I would like to thank the initiators of the CTB 2023 for carrying out this event
 
 - [2] [RISC-V-Specification: Volume 2, Privileged Specification version 20211203](https://github.com/riscv/riscv-isa-manual/releases/download/Priv-v1.12/riscv-privileged-20211203.pdf)
 
-- [3] [AAPG](link-to-aapg)
+- [3] [Automated Assembly Program Generator (aapg)](https://gitlab.com/shaktiproject/tools/aapg)
+
+- [4] [Spike RISC-V ISA Simulator](https://github.com/riscv-software-src/riscv-isa-sim)
+
+- [5] [planigale-riscv](https://gitlab.com/S34m1n4t0r/planigale_riscv)
